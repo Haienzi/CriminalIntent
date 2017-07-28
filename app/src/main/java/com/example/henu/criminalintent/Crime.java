@@ -13,6 +13,7 @@ public class Crime {
     private Date mDate;//表示crime发生的时间
     private boolean mSolved;//表示crime是否已经得到处理
     private String mTitle;
+    private Date mTime;
 
     public Date getDate() {
         return mDate;
@@ -22,8 +23,6 @@ public class Crime {
         mDate = date;
     }
 
-
-
     public boolean isSolved() {
         return mSolved;
     }
@@ -32,12 +31,22 @@ public class Crime {
         mSolved = solved;
     }
 
+    public Date getTime() {
+        return mTime;
+    }
+
+    public void setTime(Date time) {
+        mTime = time;
+    }
+
     //UUID Universal unique identifier 通用唯一标识符
     public Crime()
     {
         mId = UUID.randomUUID();
         //随机产生一个UUID类型的数值
         mDate = new Date();//初始化mDate变量
+        mTime = new Date();
+
     }
     public String getTitle() {
         return mTitle;

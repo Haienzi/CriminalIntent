@@ -4,9 +4,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -17,6 +21,8 @@ import com.example.henu.criminalintent.CrimeLab;
 import com.example.henu.criminalintent.R;
 import com.example.henu.criminalintent.activity.CrimePagerActivity;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
@@ -27,6 +33,10 @@ import java.util.List;
 public class CrimeListFragment extends Fragment {
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
+    private boolean mSubtitleVisible;//记录子标题状态
+    private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
+
+    //创建项目的视图并返回给调用者
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -34,11 +44,89 @@ public class CrimeListFragment extends Fragment {
 
         mCrimeRecyclerView = (RecyclerView)view.findViewById(R.id.crime_recycler_view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
+        if(savedInstanceState != null)
+        {
+            mSubtitleVisible = savedInstanceState.getBoolean(SAVED_SUBTITLE_VISIBLE);
+        }
         updateUI();
         return view;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(SAVED_SUBTITLE_VISIBLE,mSubtitleVisible);
+    }
+
+    //创建该fragment，可以做除了view之外的初始化工作
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        //Report that this fragment would like to participate in populating the options menu by
+        // receiving a call toonCreateOptionsMenu(Menu, MenuInflater) and related methods.
+        setHasOptionsMenu(true);
+    }
+
+    /**
+     * 创建选项菜单
+     * 按照本应用的设计选项菜单到的回调应该在fragment中而不是activity中，而在fragment中onCreateOptionsMenu
+     * 是由fragmentManager负责调用的，因此，当activity接收到操作系统的onCreateOptionsMenu(...)方法回调请求
+     * 时，我们必须明确的告诉fragmentManager，其管理的fragment应该接收此方法的调用指令
+     * @param menu
+     * @param inflater
+     */
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crim_list_menu,menu);
+
+        MenuItem subtitleItem = menu.findItem(R.id.menu_item_show_subtitle);
+        if(mSubtitleVisible)
+        {
+            subtitleItem.setTitle(R.string.hide_subtitle);
+        }else{
+            subtitleItem.setTitle(R.string.show_subtitle);
+        }
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId())
+        {
+            case R.id.menu_item_new_crime:
+                Crime crime = new Crime();
+                CrimeLab.get(getActivity()).addCrime(crime);
+                Intent intent = CrimePagerActivity.newIntent(getActivity(),crime.getId());
+                startActivity(intent);
+                return true;//完成处理后，返回true表示全部任务已经完成
+            case R.id.menu_item_show_subtitle:
+                mSubtitleVisible = !mSubtitleVisible;
+                getActivity().invalidateOptionsMenu();//下次显示的时候重建选项菜单
+                updateSubtitle();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /**
+     * 设置工具栏子标题，显示当前记录的数量
+     */
+    private void updateSubtitle(){
+        CrimeLab crimeLab = CrimeLab.get(getActivity());
+        int crimeCount = crimeLab.getCrimes().size();
+        String subtitle = getString(R.string.subtitle_format,crimeCount);
+
+        if(!mSubtitleVisible)
+        {
+            subtitle = null;
+        }
+        AppCompatActivity activity = (AppCompatActivity)getActivity();
+        activity.getSupportActionBar().setSubtitle(subtitle);
+
+    }
     @Override
     public void onResume() {
         super.onResume();
@@ -47,6 +135,7 @@ public class CrimeListFragment extends Fragment {
 
     /*
         将Adapter和RecyclerView联系在一起，设置CrimeListFragment的用户界面的方法
+        刷新界面
          */
     private void updateUI()
     {
@@ -61,6 +150,7 @@ public class CrimeListFragment extends Fragment {
         {
             mAdapter.notifyDataSetChanged();//更新数据
         }
+        updateSubtitle();//刷新菜单
     }
 
     /**
@@ -87,7 +177,9 @@ public class CrimeListFragment extends Fragment {
         {
             mCrime = crime;
             mTitleTextView.setText(mCrime.getTitle());
-            mDateTextView.setText(mCrime.getDate().toString());
+            DateFormat dateFormat = new SimpleDateFormat(CrimeFragment.DATE_FORMAT);
+            DateFormat timeFormat = new SimpleDateFormat(CrimeFragment.TIME_FORMAT);
+            mDateTextView.setText(dateFormat.format(mCrime.getDate()) +" "+timeFormat.format(mCrime.getTime()));
             mSolvedCheckBox.setChecked(mCrime.isSolved());
         }
 

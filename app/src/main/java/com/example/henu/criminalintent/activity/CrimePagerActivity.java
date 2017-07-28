@@ -2,13 +2,12 @@ package com.example.henu.criminalintent.activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 
 import com.example.henu.criminalintent.Crime;
 import com.example.henu.criminalintent.CrimeLab;
@@ -18,7 +17,10 @@ import com.example.henu.criminalintent.fragment.CrimeFragment;
 import java.util.List;
 import java.util.UUID;
 
-public class CrimePagerActivity extends FragmentActivity {
+/**
+ * Maqiuhong
+ */
+public class CrimePagerActivity extends AppCompatActivity {
     private ViewPager mViewPager;
     private List<Crime> mCrimes;
     public static final String EXTRA_CRIME_ID ="package com.example.henu.criminalintent.activity.crime_id";

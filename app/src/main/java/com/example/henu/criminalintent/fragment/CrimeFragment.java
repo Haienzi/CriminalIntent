@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +20,7 @@ import com.example.henu.criminalintent.Crime;
 import com.example.henu.criminalintent.CrimeLab;
 import com.example.henu.criminalintent.R;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
@@ -32,9 +32,11 @@ import java.util.UUID;
 public class CrimeFragment extends Fragment{
     private static final String ARG_CRIME_ID ="crime_id"; //Crime条目的Id
     private static final String DIALOG_DATE = "DialogDate";//DatePickerFragment的tag
+    private static final String DIALOG_TIME = "DialogTime";//TimePickerFragment的tag
     private static final int REQUEST_DATE = 0;//DatePickerFragment的请求代码
-    private static String DATE_FORMAT = "EEE MMM dd yyyy";
-    private static String TIME_FORMAT = "hh:mm a z";
+    private static final int REQUEST_TIME = 1;//TimePickerFragment的请求代码
+    public static String DATE_FORMAT = "EEE MMM dd yyyy";
+    public static String TIME_FORMAT = "hh:mm a";
     private Crime mCrime;
     private EditText mTitleField;
     private Button mDateButton,mTimeButton;
@@ -91,9 +93,10 @@ public class CrimeFragment extends Fragment{
         });
         //设置犯罪时间
         mDateButton = (Button)v.findViewById(R.id.crime_date);
-        String date;
+        /*String date;
         date = (String) DateFormat.format("EEEE,MMMM dd,yyyy kk:mm",mCrime.getDate());
-        mDateButton.setText(date);
+        mDateButton.setText(date);*/
+        updateDate();
         //点击日期按钮展现DatePickerFragment界面
         mDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -103,6 +106,18 @@ public class CrimeFragment extends Fragment{
                 //为DatePickerFragment设置目标Fragment
                 dialog.setTargetFragment(CrimeFragment.this,0);
                 dialog.show(manager,DIALOG_DATE);//将DialogFragment添加给FragmentManager并显示到屏幕上
+            }
+        });
+
+        mTimeButton = (Button)v.findViewById(R.id.crime_time);
+        updateTime();
+        mTimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FragmentManager manager = getFragmentManager();
+                TimePickerFragment dialog = TimePickerFragment.newInstance(mCrime.getTime());
+                dialog.setTargetFragment(CrimeFragment.this,REQUEST_TIME);
+                dialog.show(manager,DIALOG_TIME);
             }
         });
         //设置是否解决
@@ -148,9 +163,21 @@ public class CrimeFragment extends Fragment{
             //为日期按钮设置日期
             updateDate();
         }
+        if(requestCode == REQUEST_TIME)
+        {
+            Date time = (Date) data.getSerializableExtra(TimePickerFragment.EXTRA_TIME);
+            mCrime.setTime(time);
+            updateTime();
+        }
     }
     //为日期按钮设置日期
     private void updateDate() {
-        mDateButton.setText(mCrime.getDate().toString());
+        java.text.DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        mDateButton.setText(dateFormat.format(mCrime.getDate()));
+    }
+    //为时间按钮设置事件
+    private void updateTime(){
+       java.text.DateFormat timeFormat = new SimpleDateFormat(TIME_FORMAT);
+        mTimeButton.setText(timeFormat.format(mCrime.getTime()));
     }
 }
