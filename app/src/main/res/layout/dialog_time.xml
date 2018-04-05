@@ -5,5 +5,5 @@
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:timePickerMode="clock">
-    <!--设置TimePicker的样式 两种 spinner和colock-->
+    <!--设置TimePicker的样式 两种 spinner和clock-->
 </TimePicker>

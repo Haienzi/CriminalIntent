@@ -3,18 +3,25 @@ package com.example.henu.criminalintent.fragment;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.example.henu.criminalintent.Crime;
 import com.example.henu.criminalintent.CrimeLab;
@@ -35,12 +42,16 @@ public class CrimeFragment extends Fragment{
     private static final String DIALOG_TIME = "DialogTime";//TimePickerFragment的tag
     private static final int REQUEST_DATE = 0;//DatePickerFragment的请求代码
     private static final int REQUEST_TIME = 1;//TimePickerFragment的请求代码
+    private static final int REQUEST_CONTACT = 2;//获取联系人信息的请求码
     public static String DATE_FORMAT = "EEE MMM dd yyyy";
     public static String TIME_FORMAT = "hh:mm a";
     private Crime mCrime;
     private EditText mTitleField;
     private Button mDateButton,mTimeButton;
     private CheckBox mSolvedCheckBox;
+    private Button mReportButton;
+    private Button mSuspectButton;
+
 
     /**
      * 完成fragment示例及bundle对象的创建，然后将argument放入bundle对象中，最后
@@ -88,7 +99,10 @@ public class CrimeFragment extends Fragment{
 
             @Override
             public void afterTextChanged(Editable s) {
-
+              if(TextUtils.isEmpty(s))
+              {
+                  Toast.makeText(getActivity(),"标题不能为空",Toast.LENGTH_SHORT).show();
+              }
             }
         });
         //设置犯罪时间
@@ -129,8 +143,34 @@ public class CrimeFragment extends Fragment{
                 mCrime.setSolved(isChecked);//更新Crime类的mSolved变量值
             }
         });
-        return v;
+        //发送报告
+        mReportButton = (Button)v.findViewById(R.id.crime_report);
+        mReportButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //隐式Intent
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT,getCrimeReport());//内容
+                i.putExtra(Intent.EXTRA_SUBJECT,getString(R.string.crime_report_subject));//主题
+                i = Intent.createChooser(i,getString(R.string.send_report));
+                startActivity(i);
+            }
+        });
 
+        mSuspectButton = (Button)v.findViewById(R.id.crime_suspect);
+        final Intent pickContact = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+        mSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(pickContact,REQUEST_CONTACT);
+            }
+        });
+        if(mCrime.getSuspect() != null)
+        {
+            mSuspectButton.setText(mCrime.getSuspect());
+        }
+        return v;
     }
 
     @Override
@@ -147,6 +187,34 @@ public class CrimeFragment extends Fragment{
 
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
 
+        setHasOptionsMenu(true);
+
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_menu,menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId())
+        {
+            case R.id.menu_item_delete_crime:
+                CrimeLab.get(getActivity()).deleteCrime(mCrime);
+                getActivity().finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
     }
 
     @Override
@@ -179,5 +247,26 @@ public class CrimeFragment extends Fragment{
     private void updateTime(){
        java.text.DateFormat timeFormat = new SimpleDateFormat(TIME_FORMAT);
         mTimeButton.setText(timeFormat.format(mCrime.getTime()));
+    }
+    //获取犯罪报告
+    private String getCrimeReport() {
+        String solvedString = null;
+        if (mCrime.isSolved()) {
+            solvedString = getString(R.string.crime_report_solved);
+        } else {
+            solvedString = getString(R.string.crime_report_unsolved);
+        }
+
+        String dateFormat = "EEE, MMM dd";
+        String dateString = DateFormat.format(dateFormat, mCrime.getDate()).toString();
+        String suspect = mCrime.getSuspect();
+        if (suspect == null) {
+            suspect = getString(R.string.crime_report_no_suspect);
+        } else {
+            suspect = getString(R.string.crime_report_suspect);
+        }
+        //完善报告
+        String report = getString(R.string.crime_report, mCrime.getTitle(), dateString, solvedString, suspect);
+        return report;
     }
 }

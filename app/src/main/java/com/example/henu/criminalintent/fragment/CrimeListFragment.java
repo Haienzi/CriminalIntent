@@ -35,6 +35,7 @@ public class CrimeListFragment extends Fragment {
     private CrimeAdapter mAdapter;
     private boolean mSubtitleVisible;//记录子标题状态
     private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
+    public TextView emptyView;
 
     //创建项目的视图并返回给调用者
     @Nullable
@@ -44,6 +45,9 @@ public class CrimeListFragment extends Fragment {
 
         mCrimeRecyclerView = (RecyclerView)view.findViewById(R.id.crime_recycler_view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        emptyView = (TextView)view.findViewById(R.id.empty_textView);
+
         if(savedInstanceState != null)
         {
             mSubtitleVisible = savedInstanceState.getBoolean(SAVED_SUBTITLE_VISIBLE);
@@ -142,12 +146,14 @@ public class CrimeListFragment extends Fragment {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
 
+        emptyView.setVisibility(crimes.size() > 0 ? View.GONE : View.VISIBLE);
         if(mAdapter == null)
         {
             mAdapter = new CrimeAdapter(crimes);//创建CrimeAdapter
             mCrimeRecyclerView.setAdapter(mAdapter);
         }else
         {
+            mAdapter.setCrimes(crimes);
             mAdapter.notifyDataSetChanged();//更新数据
         }
         updateSubtitle();//刷新菜单
@@ -222,6 +228,11 @@ public class CrimeListFragment extends Fragment {
         @Override
         public int getItemCount() {
             return mCrimes.size();
+        }
+        //更新视图
+        public void setCrimes(List<Crime> crimes)
+        {
+            mCrimes = crimes;
         }
     }
 }

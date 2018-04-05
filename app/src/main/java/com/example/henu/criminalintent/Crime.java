@@ -15,6 +15,16 @@ public class Crime {
     private String mTitle;
     private Date mTime;
 
+    public String getSuspect() {
+        return mSuspect;
+    }
+
+    public void setSuspect(String suspect) {
+        mSuspect = suspect;
+    }
+
+    private String mSuspect;
+
     public Date getDate() {
         return mDate;
     }
@@ -42,7 +52,11 @@ public class Crime {
     //UUID Universal unique identifier 通用唯一标识符
     public Crime()
     {
-        mId = UUID.randomUUID();
+        this(UUID.randomUUID());
+    }
+    public Crime(UUID id)
+    {
+        mId = id;
         //随机产生一个UUID类型的数值
         mDate = new Date();//初始化mDate变量
         mTime = new Date();
