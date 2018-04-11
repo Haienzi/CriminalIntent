@@ -21,6 +21,8 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.henu.criminalintent.Crime;
@@ -30,6 +32,9 @@ import com.example.henu.criminalintent.R;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by hppc on 2017/3/18.
@@ -46,12 +51,22 @@ public class CrimeFragment extends Fragment{
     public static String DATE_FORMAT = "EEE MMM dd yyyy";
     public static String TIME_FORMAT = "hh:mm a";
     private Crime mCrime;
-    private EditText mTitleField;
-    private Button mDateButton,mTimeButton;
-    private CheckBox mSolvedCheckBox;
+    @BindView(R.id.crime_title)
+    EditText mTitleField;
+    @BindView(R.id.crime_date)
+    Button mDateButton;
+    @BindView(R.id.crime_time)
+    Button mTimeButton;
+    @BindView(R.id.crime_solved)
+    CheckBox mSolvedCheckBox;
+    @BindView(R.id.crime_report)
     private Button mReportButton;
+    @BindView(R.id.crime_suspect)
     private Button mSuspectButton;
-
+    @BindView(R.id.crime_camera)
+    private ImageButton mPhotoButton;//拍照按钮
+    @BindView(R.id.crime_photo)
+    private ImageView mPhotoView;//照片视图
 
     /**
      * 完成fragment示例及bundle对象的创建，然后将argument放入bundle对象中，最后
@@ -83,8 +98,7 @@ public class CrimeFragment extends Fragment{
         添加给父视图 我们以代码的方式添加生成的视图 所以选择false
          */
         View v = inflater.inflate(R.layout.fragment_crime,container,false);
-
-        mTitleField = (EditText)v.findViewById(R.id.crime_title);
+        ButterKnife.bind(v);
         mTitleField.setText(mCrime.getTitle());//通过对应的Crime设置标题
         mTitleField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -106,7 +120,6 @@ public class CrimeFragment extends Fragment{
             }
         });
         //设置犯罪时间
-        mDateButton = (Button)v.findViewById(R.id.crime_date);
         /*String date;
         date = (String) DateFormat.format("EEEE,MMMM dd,yyyy kk:mm",mCrime.getDate());
         mDateButton.setText(date);*/
@@ -122,8 +135,6 @@ public class CrimeFragment extends Fragment{
                 dialog.show(manager,DIALOG_DATE);//将DialogFragment添加给FragmentManager并显示到屏幕上
             }
         });
-
-        mTimeButton = (Button)v.findViewById(R.id.crime_time);
         updateTime();
         mTimeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -135,7 +146,6 @@ public class CrimeFragment extends Fragment{
             }
         });
         //设置是否解决
-        mSolvedCheckBox = (CheckBox)v.findViewById(R.id.crime_solved);
         mSolvedCheckBox.setChecked(mCrime.isSolved());//
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -144,7 +154,6 @@ public class CrimeFragment extends Fragment{
             }
         });
         //发送报告
-        mReportButton = (Button)v.findViewById(R.id.crime_report);
         mReportButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -158,7 +167,6 @@ public class CrimeFragment extends Fragment{
             }
         });
 
-        mSuspectButton = (Button)v.findViewById(R.id.crime_suspect);
         final Intent pickContact = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
         mSuspectButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -173,6 +181,7 @@ public class CrimeFragment extends Fragment{
         return v;
     }
 
+    //Fragment的onCreate()方法可以在其中初始化除了View之外的所有东西，在onCreateView之前调用
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
