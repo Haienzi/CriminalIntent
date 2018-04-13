@@ -2,8 +2,12 @@ package com.example.henu.criminalintent.fragment;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -25,10 +29,12 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.example.henu.criminalintent.Crime;
-import com.example.henu.criminalintent.CrimeLab;
 import com.example.henu.criminalintent.R;
+import com.example.henu.criminalintent.bean.Crime;
+import com.example.henu.criminalintent.bean.CrimeLab;
+import com.example.henu.criminalintent.util.PictureUtils;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
@@ -45,12 +51,15 @@ public class CrimeFragment extends Fragment{
     private static final String ARG_CRIME_ID ="crime_id"; //Crime条目的Id
     private static final String DIALOG_DATE = "DialogDate";//DatePickerFragment的tag
     private static final String DIALOG_TIME = "DialogTime";//TimePickerFragment的tag
+    private static final String DIALOG_PHOTO = "DialogPhoto";//PhotoDetailFragment的tag
     private static final int REQUEST_DATE = 0;//DatePickerFragment的请求代码
     private static final int REQUEST_TIME = 1;//TimePickerFragment的请求代码
     private static final int REQUEST_CONTACT = 2;//获取联系人信息的请求码
+    private static final int REQUEST_PHOTO = 3;//获取相片的请求码
     public static String DATE_FORMAT = "EEE MMM dd yyyy";
     public static String TIME_FORMAT = "hh:mm a";
     private Crime mCrime;
+    private File mPhotoFile;//图片文件
     @BindView(R.id.crime_title)
     EditText mTitleField;
     @BindView(R.id.crime_date)
@@ -60,13 +69,13 @@ public class CrimeFragment extends Fragment{
     @BindView(R.id.crime_solved)
     CheckBox mSolvedCheckBox;
     @BindView(R.id.crime_report)
-    private Button mReportButton;
+    Button mReportButton;
     @BindView(R.id.crime_suspect)
-    private Button mSuspectButton;
+    Button mSuspectButton;
     @BindView(R.id.crime_camera)
-    private ImageButton mPhotoButton;//拍照按钮
+    ImageButton mPhotoButton;//拍照按钮
     @BindView(R.id.crime_photo)
-    private ImageView mPhotoView;//照片视图
+    ImageView mPhotoView;//照片视图
 
     /**
      * 完成fragment示例及bundle对象的创建，然后将argument放入bundle对象中，最后
@@ -98,7 +107,7 @@ public class CrimeFragment extends Fragment{
         添加给父视图 我们以代码的方式添加生成的视图 所以选择false
          */
         View v = inflater.inflate(R.layout.fragment_crime,container,false);
-        ButterKnife.bind(v);
+        ButterKnife.bind(this,v);
         mTitleField.setText(mCrime.getTitle());//通过对应的Crime设置标题
         mTitleField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -178,6 +187,43 @@ public class CrimeFragment extends Fragment{
         {
             mSuspectButton.setText(mCrime.getSuspect());
         }
+        PackageManager packageManager = getActivity().getPackageManager();
+        if(packageManager.resolveActivity(pickContact,packageManager.MATCH_DEFAULT_ONLY) == null)
+        {
+            mSuspectButton.setEnabled(false);
+        }
+
+        //打开相机应用默认只能拍摄缩略图类似的低分辨率图片
+        final Intent captureImage = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        boolean canTakePhoto = mPhotoFile != null && captureImage.resolveActivity(packageManager)!=null;
+        mPhotoButton.setEnabled(canTakePhoto);
+        if(canTakePhoto)
+        {
+            //获取存储路径的URI
+            Uri uri = Uri.fromFile(mPhotoFile);
+            //使用文件系统存储数据
+            captureImage.putExtra(MediaStore.EXTRA_OUTPUT,uri);
+        }
+        mPhotoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(captureImage,REQUEST_PHOTO);
+            }
+        });
+
+        updatePhotoView();
+
+        //点击缩略图显示详细的图片
+        mPhotoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mPhotoFile == null || !mPhotoFile.exists()) return;//no photo
+                FragmentManager manager = getFragmentManager();
+                PhotoDetailFragment dialog = PhotoDetailFragment.newInstance(mPhotoFile);
+                dialog.show(manager,DIALOG_PHOTO);
+            }
+        });
+
         return v;
     }
 
@@ -195,7 +241,7 @@ public class CrimeFragment extends Fragment{
         UUID crimeId = (UUID)getArguments().getSerializable(ARG_CRIME_ID);
 
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
-
+        mPhotoFile = CrimeLab.get(getActivity()).getPhotoFile(mCrime);
         setHasOptionsMenu(true);
 
     }
@@ -245,6 +291,9 @@ public class CrimeFragment extends Fragment{
             Date time = (Date) data.getSerializableExtra(TimePickerFragment.EXTRA_TIME);
             mCrime.setTime(time);
             updateTime();
+        }else if (requestCode == REQUEST_PHOTO)
+        {
+            updatePhotoView();
         }
     }
     //为日期按钮设置日期
@@ -277,5 +326,15 @@ public class CrimeFragment extends Fragment{
         //完善报告
         String report = getString(R.string.crime_report, mCrime.getTitle(), dateString, solvedString, suspect);
         return report;
+    }
+    private void updatePhotoView()
+    {
+        if(mPhotoFile == null || !mPhotoFile.exists())
+        {
+            mPhotoView.setImageDrawable(null);
+        }else{
+            Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(),getActivity());
+            mPhotoView.setImageBitmap(bitmap);
+        }
     }
 }
