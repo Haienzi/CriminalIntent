@@ -1,11 +1,11 @@
-package com.example.henu.criminalintent;
+package com.example.henu.criminalintent.bean;
 
 import java.util.Date;
 import java.util.UUID;
 
 /**
- * Created by hppc on 2017/3/18.
- * 关于所做的市的数据属性
+ * Created by mqh on 2017/3/18.
+ * 关于所做的事的数据属性
  */
 
 public class Crime {
@@ -74,4 +74,8 @@ public class Crime {
         return mId;
     }
 
+    public String getPhotoFilename()
+    {
+        return "IMG_" + getId().toString() +".jpg";
+    }
 }

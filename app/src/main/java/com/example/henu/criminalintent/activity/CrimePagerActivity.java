@@ -9,8 +9,8 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 
-import com.example.henu.criminalintent.Crime;
-import com.example.henu.criminalintent.CrimeLab;
+import com.example.henu.criminalintent.bean.Crime;
+import com.example.henu.criminalintent.bean.CrimeLab;
 import com.example.henu.criminalintent.R;
 import com.example.henu.criminalintent.fragment.CrimeFragment;
 

@@ -16,8 +16,8 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
-import com.example.henu.criminalintent.Crime;
-import com.example.henu.criminalintent.CrimeLab;
+import com.example.henu.criminalintent.bean.Crime;
+import com.example.henu.criminalintent.bean.CrimeLab;
 import com.example.henu.criminalintent.R;
 import com.example.henu.criminalintent.activity.CrimePagerActivity;
 

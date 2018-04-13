@@ -1,20 +1,23 @@
-package com.example.henu.criminalintent;
+package com.example.henu.criminalintent.bean;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 
 import com.example.henu.criminalintent.DbSchema.CrimeBaseHelper;
 import com.example.henu.criminalintent.DbSchema.CrimeCursorWrapper;
 import com.example.henu.criminalintent.DbSchema.CrimeDbSchema.CrimeTable;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Created by hppc on 2017/3/19.
+ * Created by mqh on 2017/3/19.
+ * 负责CriminalIntent的数据持久工作
  */
 /*
 存储crime数组对象 单例模式]
@@ -125,5 +128,17 @@ public class CrimeLab {
             mCrimes.add(crime);
         }*/
 
+    }
+    //定位图片文件 返回指向某个具体位置的文件对象
+    public File getPhotoFile(Crime crime)
+    {
+        //获取系统存储图片文件的外部存储目录
+        File externalFilesDir = mContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if(externalFilesDir == null)
+        {
+            return null;
+        }
+        //根据crime图片名称生成对应的图片文件存放在目录中
+        return new File(externalFilesDir,crime.getPhotoFilename());
     }
 }

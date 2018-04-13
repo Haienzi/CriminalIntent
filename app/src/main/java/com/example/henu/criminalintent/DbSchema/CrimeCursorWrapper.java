@@ -3,7 +3,7 @@ package com.example.henu.criminalintent.DbSchema;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 
-import com.example.henu.criminalintent.Crime;
+import com.example.henu.criminalintent.bean.Crime;
 import com.example.henu.criminalintent.DbSchema.CrimeDbSchema.CrimeTable;
 
 import java.util.Date;
